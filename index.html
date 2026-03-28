@@ -797,7 +797,7 @@ socket.on('qr_update', () => {
   showQR();
 
   function loadQR() {
-    fetch('/api/qr')
+    fetch('https://signn-reminder-system.up.railway.app/api/qr')
       .then(res => res.json())
       .then(data => {
         const img = document.getElementById('qr-img');
