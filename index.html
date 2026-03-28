@@ -726,6 +726,7 @@ select.form-input{cursor:pointer}
 <div class="toasts" id="toasts"></div>
 
 <script>
+const API = "https://signn-reminder-system.up.railway.app";
 const socket = io();
 let clinicsData = { clinics:[] };
 let summaryData = [];
@@ -826,7 +827,7 @@ socket.on('reset', () => { toast('↺ Day reset','info'); fetchSummary(); });
 
 async function loadTemplates() {
   try {
-    const res = await fetch('/api/templates');
+    const res = await fetch(`${API}/api/templates`);
 
     if (!res.ok) {
       throw new Error("API failed: " + res.status);
@@ -916,7 +917,7 @@ async function fetchAll() {
 
 async function fetchStatus() {
   try {
-    const d = await (await fetch('/api/status')).json();
+    const d = await (await fetch(`${API}/api/status`)).json();
     statsData = d.stats || {};
     if (d.connected) setWaStatus('connected','✓ Connected');
     else if (d.qrAvailable) setWaStatus('connecting','Scan QR Code');
@@ -927,8 +928,8 @@ async function fetchStatus() {
 async function fetchSummary() {
   try {
     const [s, e] = await Promise.all([
-      fetch('/api/summary').then(r=>r.json()),
-      fetch('/api/employees').then(r=>r.json())
+      fetch(`${API}/api/summary`).then(r=>r.json()),
+     fetch(`${API}/api/employees`).then(r=>r.json())
     ]);
     summaryData = s.summary || [];
     scanRecords = e.employees || [];
@@ -1008,7 +1009,7 @@ async function fetchSummary() {
 
 async function loadClinics() {
   try {
-    clinicsData = await (await fetch('/api/clinics')).json();
+    clinicsData = await (await fetch(`${API}/api/clinics`)).json();
     renderClinicsTable();
     renderStaffTable();
     populateDropdowns();
@@ -1019,14 +1020,14 @@ async function loadClinics() {
 
 async function loadSchedule() {
   try {
-    scheduleData = await (await fetch('/api/schedule')).json();
+    scheduleData = await (await fetch(`${API}/api/schedule`)).json();
     renderRemindersPage();
   } catch {}
 }
 
 async function loadActivityLog() {
   try {
-    const d = await (await fetch('/api/activity?limit=100')).json();
+    const d = await (await fetch(`${API}/api/activity?limit=100`)).json();
     activityLog = d.logs || [];
     const el = document.getElementById('full-log');
     el.innerHTML = activityLog.length ? activityLog.map(e => logEntryHTML(e)).join('') : '<div class="empty"><div class="empty-icon">≡</div><div class="empty-sub">No activity yet</div></div>';
@@ -1175,7 +1176,18 @@ async function saveClinic() {
   const body = { name:document.getElementById('c-name').value.trim(), location:document.getElementById('c-location').value.trim(), supervisor:{ name:document.getElementById('c-sup-name').value.trim(), whatsapp:document.getElementById('c-sup-wa').value.trim() } };
   if (!body.name||!body.location||!body.supervisor.name||!body.supervisor.whatsapp) { toast('All fields required','error'); return; }
   try {
-    const r = await (await fetch(editId?`/api/clinics/${editId}`:'/api/clinics', { method:editId?'PUT':'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })).json();
+const r = await (
+  await fetch(
+    editId
+      ? `${API}/api/clinics/${editId}`
+      : `${API}/api/clinics`,
+    {
+      method: editId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }
+  )
+).json();    
     if (r.success) { toast(editId?'✅ Clinic updated':'✅ Clinic added','success'); closeModal('clinic-modal'); await loadClinics(); fetchSummary(); }
     else toast('Error: '+r.error,'error');
   } catch { toast('Request failed','error'); }
@@ -1183,7 +1195,7 @@ async function saveClinic() {
 
 async function deleteClinic(id, name) {
   if (!confirm(`Delete clinic "${name}"?`)) return;
-  const r = await (await fetch('/api/clinics/'+id,{method:'DELETE'})).json();
+  const r = await (await fetch(`${API}/api/clinics/${id}`, { method: 'DELETE' })).json();
   if (r.success) { toast('Clinic deleted','info'); await loadClinics(); fetchSummary(); }
   else toast('Error: '+r.error,'error');
 }
@@ -1592,7 +1604,7 @@ async function toggleReminder(id, enabled) {
 
 async function deleteReminder(id, name) {
   if (!confirm(`Delete reminder "${name}"?`)) return;
-  const r = await (await fetch('/api/schedule/'+id,{method:'DELETE'})).json();
+  const r = await (await fetch(`${API}/api/schedule/${id}`, { method: 'DELETE' })).json();
   if (r.success) { toast('Reminder deleted','info'); await loadSchedule(); }
   else toast('Error: '+r.error,'error');
 }
@@ -1602,7 +1614,7 @@ async function trigger(type) {
   const labels={morning:'Morning Reminders',followup:'Follow-up Reminders',supervisor:'Supervisor Alerts'};
   toast('⏳ Sending '+labels[type]+'...','info');
   try {
-    const r = await (await fetch('/api/trigger/'+type,{method:'POST'})).json();
+    const r = await (await fetch(`${API}/api/trigger/${type}`, { method: 'POST' })).json();
     if (r.success) toast('✅ '+labels[type]+' sent!','success');
     else toast('❌ '+(r.error||'Failed'),'error');
   } catch { toast('❌ Request failed','error'); }
@@ -1610,7 +1622,7 @@ async function trigger(type) {
 
 async function resetToday() {
   if (!confirm('Reset all scan data for today?')) return;
-  const r = await (await fetch('/api/reset',{method:'POST'})).json();
+  const r = await (await fetch(`${API}/api/reset`, { method: 'POST' })).json();
   if (r.success) toast('↺ Reset done','info');
 }
 
@@ -1634,7 +1646,7 @@ function sendWhatsApp() {
     return;
   }
 
-  fetch('/api/send-message', {
+  fetch(`${API}/api/send-message`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1653,7 +1665,7 @@ function sendWhatsApp() {
 
 async function loadTemplates() {
   try {
-    const res = await fetch('/api/templates');
+    const res = await fetch(`${API}/api/templates`);
 
     if (!res.ok) {
       throw new Error("API failed: " + res.status);
@@ -1830,7 +1842,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = this.value;
       if (!id) return;
 
-      const res = await fetch('/api/templates/' + id);
+      const res = await fetch(`${API}/api/templates/${id}`)
       const data = await res.json();
 
       document.getElementById('message-text').value = data.message;
@@ -1848,7 +1860,7 @@ async function sendMessage() {
   }
     const message = document.getElementById('message').value;
 
-    const res = await fetch('/api/send', {
+    const res = await fetch(`${API}/api/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ number, message })
@@ -1957,7 +1969,7 @@ async function sendFromPopup() {
   async function onTemplateChange(id) {
   if (!id) return;
 
-  const res = await fetch('/api/templates/' + id);
+  const res = await fetch(`${API}/api/templates/${id}`);
   const t = await res.json();
 
   document.getElementById('message-text').value = t.message || '';
@@ -2010,7 +2022,7 @@ templates.forEach(t => {
 
 async function loadTemplates() {
   try {
-    const res = await fetch('/api/templates');
+    const res = await fetch(`${API}/api/templates`);
 
     if (!res.ok) {
       throw new Error("API failed: " + res.status);
@@ -2077,7 +2089,7 @@ async function onTemplateChange(id) {
   if (!id) return;
 
   try {
-    const res = await fetch('/api/templates/' + id);
+    const res = await fetch(`${API}/api/templates/${id}`);
     const t = await res.json();
 
     document.getElementById('message-text').value = t.message || '';
@@ -2105,7 +2117,7 @@ async function onTemplateChange(id) {
     return;
   }
 
-  fetch('/api/send', {   // ✅ correct API
+  fetch(`${API}/api/send`, {   // ✅ correct API
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
