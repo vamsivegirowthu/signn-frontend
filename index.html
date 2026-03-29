@@ -897,7 +897,7 @@ function loadTemplateDropdown(templates) {
 // ===== TEMPLATE SELECT CHANGE =====
 function onTemplateChange(id) {
   const templates = window._templates || [];
-  const t = templates.find(x => x.id == id);
+  const t = templates.find(x => x.id == id || x.name == id);
 
   if (!t) return;
 
@@ -1977,6 +1977,16 @@ async function sendFromPopup() {
   const t = await res.json();
 
   document.getElementById('message-text').value = t.message || '';
+
+    const details = document.getElementById('template-details');
+
+details.innerHTML = `
+  <b>Name:</b> ${t.name || '-'} <br>
+  <b>Time:</b> ${t.time || 'Not set'} <br>
+  <b>Days:</b> ${t.days ? t.days.join(', ') : 'Daily'} <br>
+  <b>Message:</b> ${t.message || '-'} <br>
+  <b>Sender:</b> ${t.senderName || 'Admin'} (${t.senderPhone || '-'})
+`;
 
   const img = document.getElementById('template-image');
   if (t.image) {
