@@ -469,6 +469,9 @@ select.form-input{cursor:pointer}
       <div class="form-group">
         <label class="form-label">Message</label>
         <textarea id="message-text" class="form-input" rows="4"></textarea>
+        <div id="template-details" style="margin-top:10px; padding:10px; border:1px solid #ccc;">
+  Select a template to see details
+</div>
          <img id="template-image" style="width:200px; display:none; margin-top:10px;">
       </div>
 
@@ -893,12 +896,21 @@ function loadTemplateDropdown(templates) {
 // ===== TEMPLATE SELECT CHANGE =====
 function onTemplateChange(id) {
   const templates = window._templates || [];
-
   const t = templates.find(x => x.id == id);
 
   if (!t) return;
 
+  // message fill
   document.getElementById('message-text').value = t.message || '';
+
+  // details show
+  document.getElementById('template-details').innerHTML = `
+    <b>Name:</b> ${t.name || '-'} <br>
+    <b>Days:</b> ${t.days ? t.days.join(', ') : 'Daily'} <br>
+    <b>Time:</b> ${t.time || 'Not set'} <br>
+    <b>Message:</b> ${t.message || '-'} <br>
+    <b>Sender:</b> ${t.senderName || 'Admin'} (${t.senderPhone || '-'})
+  `;
 }
 
 // ── DATA FETCH ───────────────────────────────────────────────────────────────
