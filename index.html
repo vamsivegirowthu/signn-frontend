@@ -793,12 +793,10 @@ socket.on('connect', () => {
 setInterval(fetchStatus, 5000);
 socket.on('wa_connected', () => { setWaStatus('connected','✓ Connected'); closeModal('qr-modal'); toast('✅ WhatsApp connected!','success'); });
 socket.on('wa_disconnected', d => { setWaStatus('disconnected','✗ Disconnected'); toast('⚠️ WA disconnected','error'); });
-socket.on('qr_update', () => {
+socket.on('qr', (qr) => {
   setWaStatus('connecting','Scan QR Code');
-  showQR();
+  
 
-  function loadQR() {
-    fetch('https://signn-reminder-system.up.railway.app/api/qr')
       .then(res => res.json())
       .then(data => {
         const img = document.getElementById('qr-img');
@@ -813,7 +811,6 @@ socket.on('qr_update', () => {
       .catch(err => console.error("QR error:", err));
   }
 
-  loadQR();
 
   clearInterval(window._qrTimer);
   window._qrTimer = setInterval(loadQR, 20000);
