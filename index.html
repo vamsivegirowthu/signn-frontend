@@ -726,8 +726,8 @@ select.form-input{cursor:pointer}
 <div class="toasts" id="toasts"></div>
 
 <script>
-const API = "https://signn-reminder-system.up.railway.app";
-const socket = io();
+const API = "https://signn-reminder-system-production.up.railway.app";
+const socket = io("https://signn-reminder-system-production.up.railway.app");
 let clinicsData = { clinics:[] };
 let summaryData = [];
 let scheduleData = { reminders:[] };
@@ -795,6 +795,16 @@ socket.on('wa_connected', () => { setWaStatus('connected','✓ Connected'); clos
 socket.on('wa_disconnected', d => { setWaStatus('disconnected','✗ Disconnected'); toast('⚠️ WA disconnected','error'); });
 socket.on('qr', (qr) => {
   setWaStatus('connecting','Scan QR Code');
+
+  const img = document.getElementById('qr-img');
+
+  if (qr) {
+    img.src = qr; // 🔥 backend already image పంపుతుంది
+    openModal('qr-modal');
+  } else {
+    img.src = "";
+  }
+});
   
 
       .then(res => res.json())
