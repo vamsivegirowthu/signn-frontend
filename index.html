@@ -807,24 +807,8 @@ socket.on('qr', (qr) => {
 });
   
 
-      .then(res => res.json())
-      .then(data => {
-        const img = document.getElementById('qr-img');
-
-        if (data.success && data.qr) {
-          img.src =
-            "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(data.qr);
-        } else {
-          img.src = "";
-        }
-      })
-      .catch(err => console.error("QR error:", err));
-  }
-
-
-  clearInterval(window._qrTimer);
-  window._qrTimer = setInterval(loadQR, 20000);
-});socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
+  
+socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
 socket.on('clinics_data', d => { clinicsData=d; renderClinicsTable(); renderStaffTable(); populateDropdowns(); renderRules(); });
 socket.on('schedule_updated', d => { scheduleData=d; renderRemindersPage(); });
