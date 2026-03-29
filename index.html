@@ -1650,22 +1650,21 @@ function sendWhatsApp() {
     return;
   }
 
-  fetch(`${API}/api/send-message`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ number: number, message: message })
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert('Message Sent ✅');
-  })
-  .catch(err => {
-    alert('Error ❌');
-    console.log(err);
-  });
-}
+ fetch(`${API}/api/send`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ number: number, message: message })
+})
+.then(res => res.json())
+.then(data => {
+  alert('Message Sent ✅');
+})
+.catch(err => {
+  alert('Error ❌');
+  console.log(err);
+});
 
 async function loadTemplates() {
   try {
