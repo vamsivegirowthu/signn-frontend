@@ -1111,16 +1111,10 @@ async function sendWhatsApp() {
     });
 
     const data = await res.json();
-
-    if (data.success) {
-      alert("✅ Message sent");
-    } else {
-      alert("❌ Failed");
-    }
+    console.log(data);
 
   } catch (err) {
     console.error(err);
-    alert("❌ Error");
   }
 }
 
@@ -1399,10 +1393,8 @@ async function sendWhatsApp() {
     alert("Error ❌");
   });
 }
-  if (!confirm('Reset all scan data for today?')) return;
-  const r = await (await fetch('/api/reset',{method:'POST'})).json();
-  if (r.success) toast('↺ Reset done','info');
-}
+
+
 
 // ── QR ────────────────────────────────────────────────────────────────────────
 function showQR() {
@@ -1469,6 +1461,7 @@ async function sendWhatsApp() {
   } catch (err) {
     alert("Error ❌");
   }
+}
 }
   
 </script>
