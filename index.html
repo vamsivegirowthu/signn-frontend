@@ -231,6 +231,7 @@ select.form-input{cursor:pointer}
     <button class="nav-item" data-page="pending"><span class="nav-icon">△</span> Pending Scans <span class="nav-badge" id="pending-badge">0</span></button>
     <button class="nav-item" data-page="messages"><span class="nav-icon">◻</span> Message Logs</button>
     <button class="nav-item" data-page="sessions"><span class="nav-icon">◉</span> WA Sessions</button>
+    <button class="nav-item" data-page="templates"><span class="nav-icon">📝</span> Reminder Templates</button>
 
     <div class="nav-section" style="margin-top:.5rem">Analytics</div>
     <button class="nav-item" data-page="reports"><span class="nav-icon">▦</span> Reports</button>
@@ -440,6 +441,22 @@ select.form-input{cursor:pointer}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem" id="sessions-grid">
     <!-- filled dynamically -->
+  </div>
+</div>
+
+<!-- REMINDER TEMPLATES -->
+<div class="page" id="page-templates">
+  <div class="page-hdr-row page-header">
+    <div>
+      <div class="page-heading">Reminder Templates</div>
+      <div class="page-sub">Manage WhatsApp templates</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      Templates working ✅
+    </div>
   </div>
 </div>
 
@@ -658,8 +675,24 @@ let rules = [];
 let complianceChart = null;
 
 // ── NAV ──────────────────────────────────────────────────────────────────────
-const PAGE_TITLES = { dashboard:'Dashboard', clinics:'Clinics', staff:'Staff', shifts:'Shifts', rules:'Reminder Rules', daily:'Daily Scans', pending:'Pending Scans', messages:'Message Logs', sessions:'WA Sessions', reports:'Reports', reminders:'Reminder Schedule', triggers:'Manual Triggers', activity:'Activity Log' };
+const PAGE_TITLES = { 
+  dashboard:'Dashboard',
+  clinics:'Clinics',
+  staff:'Staff',
+  shifts:'Shifts',
+  rules:'Reminder Rules',
+  daily:'Daily Scans',
+  pending:'Pending Scans',
+  messages:'Message Logs',
+  sessions:'WA Sessions',
 
+  templates:'Reminder Templates',  // ✅ ADD THIS
+
+  reports:'Reports',
+  reminders:'Reminder Schedule',
+  triggers:'Manual Triggers',
+  activity:'Activity Log'
+};
 document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
   btn.addEventListener('click', () => {
     const page = btn.dataset.page;
