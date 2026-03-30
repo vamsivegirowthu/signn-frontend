@@ -231,7 +231,6 @@ select.form-input{cursor:pointer}
     <button class="nav-item" data-page="pending"><span class="nav-icon">△</span> Pending Scans <span class="nav-badge" id="pending-badge">0</span></button>
     <button class="nav-item" data-page="messages"><span class="nav-icon">◻</span> Message Logs</button>
     <button class="nav-item" data-page="sessions"><span class="nav-icon">◉</span> WA Sessions</button>
-    <button class="nav-item" data-page="templates"><span class="nav-icon">📝</span> Reminder Templates</button>
 
     <div class="nav-section" style="margin-top:.5rem">Analytics</div>
     <button class="nav-item" data-page="reports"><span class="nav-icon">▦</span> Reports</button>
@@ -435,96 +434,14 @@ select.form-input{cursor:pointer}
 
 <!-- WA SESSIONS -->
 <div class="page" id="page-sessions">
-
-  <!-- HEADER FIRST -->
   <div class="page-hdr-row page-header">
-    <div>
-      <div class="page-heading">WhatsApp Sessions</div>
-      <div class="page-sub">Manage and send WhatsApp messages.</div>
-    </div>
+    <div><div class="page-heading">WhatsApp Sessions</div><div class="page-sub">Manage and monitor WhatsApp integration sessions.</div></div>
     <button class="btn btn-primary" onclick="showQR()">⏻ New Session</button>
   </div>
-
-  <!-- SEND WHATSAPP -->
-  <div class="card" style="margin-bottom:1rem">
-    <div class="card-header">
-      <div class="card-title">📤 Send WhatsApp Message</div>
-    </div>
-
-    <div class="card-body">
-
-      <!-- NUMBER -->
-      <div class="form-group">
-        <label class="form-label">WhatsApp Number</label>
-        <input id="wa-number" class="form-input" placeholder="919876543210">
-      </div>
-
-      <!-- TEMPLATE -->
-      <div class="form-group">
-        <label class="form-label">Select Template</label>
-        <select class="form-input" id="template-select" onchange="onTemplateChange(this.value)"></select>
-      </div>
-
-      <!-- MESSAGE -->
-      <div class="form-group">
-        <label class="form-label">Message</label>
-        <textarea id="message-text" class="form-input" rows="4"></textarea>
-        <div id="template-details" style="margin-top:10px; padding:10px; border:1px solid #ccc;">
-  Select a template to see details
-</div>
-         <img id="template-image" style="width:200px; display:none; margin-top:10px;">
-      </div>
-
-      <!-- IMAGE -->
-
-
-  <br>
-
-  <!-- preview -->
-  <img id="selected-image" style="width:200px;display:none;">
-  </div>
-      </div>
-
-      <!-- BUTTON -->
-      <button class="btn btn-success" onclick="sendWhatsApp()">Send Message</button>
-
-    </div>
-  </div>
-
-  <!-- SESSIONS GRID -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem" id="sessions-grid">
+    <!-- filled dynamically -->
   </div>
-
 </div>
-  
- <!-- TEMPLATES PAGE -->
-<div class="page" id="page-templates">
-
-  <div class="page-header">
-    <div class="page-heading">Reminder Templates</div>
-    <div class="page-sub">Manage your templates</div>
-  </div>
-
-  <div class="card">
-    <div class="card-body">
-
-      <input id="temp-name" class="form-input" placeholder="Template Name" />
-      <br><br>
-
-      <textarea id="temp-message" class="form-input" placeholder="Message"></textarea>
-      <br><br>
-
-      <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
-
-      <hr><br>
-
-      <div id="template-list"></div>
-
-    </div>
-  </div>
-
-</div>
-  
 
 <!-- REPORTS -->
 <div class="page" id="page-reports">
@@ -729,10 +646,8 @@ select.form-input{cursor:pointer}
 <div class="toasts" id="toasts"></div>
 
 <script>
-const API = "https://signn-reminder-system-production.up.railway.app";
-const socket = io("https://signn-reminder-system-production.up.railway.app");
+const socket = io();
 let clinicsData = { clinics:[] };
-let selectedImage = null;
 let summaryData = [];
 let scheduleData = { reminders:[] };
 let statsData = {};
@@ -760,7 +675,6 @@ document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
     if (page === 'sessions') renderSessions();
     if (page === 'reports') initReports();
     if (page === 'staff') renderStaffTable();
-    if (page === 'templates') loadTemplates();
   });
 });
 
@@ -790,29 +704,10 @@ function setWaStatus(status, label) {
 }
 
 // ── SOCKET ───────────────────────────────────────────────────────────────────
-socket.on('connect', () => {
-  fetchAll();
-  loadTemplates(); // 🔥 VERY IMPORTANT
-});
-setInterval(fetchStatus, 5000);
+socket.on('connect', fetchAll);
 socket.on('wa_connected', () => { setWaStatus('connected','✓ Connected'); closeModal('qr-modal'); toast('✅ WhatsApp connected!','success'); });
 socket.on('wa_disconnected', d => { setWaStatus('disconnected','✗ Disconnected'); toast('⚠️ WA disconnected','error'); });
-socket.on('qr', (qr) => {
-  setWaStatus('connecting','Scan QR Code');
-
-  const img = document.getElementById('qr-img');
-
-  if (qr) {
-   img.src = qr;
-   img.style.display = 'block';   // 👉 ఇది add చేయాలి // 🔥 backend already image పంపుతుంది
-    openModal('qr-modal');
-  } else {
-    img.src = "";
-  }
-});
-  
-
-  
+socket.on('qr_update', () => { setWaStatus('connecting','Scan QR Code'); showQR(); clearInterval(window._qrTimer); window._qrTimer = setInterval(() => { const img=document.getElementById('qr-img'); img.src='/api/qr?t='+Date.now(); }, 20000); });
 socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
 socket.on('clinics_data', d => { clinicsData=d; renderClinicsTable(); renderStaffTable(); populateDropdowns(); renderRules(); });
@@ -821,102 +716,6 @@ socket.on('activity', entries => { (Array.isArray(entries) ? [...entries].revers
 socket.on('scan_update', fetchSummary);
 socket.on('reset', () => { toast('↺ Day reset','info'); fetchSummary(); });
 
-async function loadTemplates() {
-  try {
-    const res = await fetch(`${API}/api/templates`);
-
-    if (!res.ok) {
-      throw new Error("API failed: " + res.status);
-    }
-
-    const data = await res.json();
-    console.log("Templates API:", data);
-
-   let templates = [];
-
-if (Array.isArray(data)) {
-  templates = data;
-} else if (Array.isArray(data.templates?.templates)) {
-  templates = data.templates.templates;
-} else if (Array.isArray(data.templates)) {
-  templates = data.templates;
-} else if (Array.isArray(data.data)) {
-  templates = data.data;
-}
-
-    if (!Array.isArray(templates)) templates = [];
-
-    window._templates = templates;
-
-    loadTemplateDropdown(templates);
-
-    const list = document.getElementById('template-list');
-
-    if (!list) return;
-
-    list.innerHTML = '';
-
-    if (templates.length === 0) {
-      list.innerHTML = `<p>No templates found</p>`;
-      return;
-    }
-
-    templates.forEach(t => {
-      const div = document.createElement('div');
-
-      div.innerHTML = `
-        <div style="padding:10px;border-bottom:1px solid #eee">
-          <b>${t.name || 'No Name'}</b><br>
-          ${t.message || ''}
-        </div>
-      `;
-
-      list.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("Template error:", err);
-  }
-}
-
-
-  // ===== TEMPLATE DROPDOWN =====
-function loadTemplateDropdown(templates) {
-  const select = document.getElementById('template-select');
-
-  if (!select) return;
-
-  select.innerHTML = '<option value="">Select Template</option>';
-
-  templates.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = t.name;
-    select.appendChild(opt);
-  });
-}
-
-
-// ===== TEMPLATE SELECT CHANGE =====
-function onTemplateChange(id) {
-  const templates = window._templates || [];
-  const t = templates.find(x => x.id == id || x.name == id);
-
-  if (!t) return;
-
-  // message fill
-  document.getElementById('message-text').value = t.message || '';
-
-  // details show
-  document.getElementById('template-details').innerHTML = `
-    <b>Name:</b> ${t.name || '-'} <br>
-    <b>Days:</b> ${t.days ? t.days.join(', ') : 'Daily'} <br>
-    <b>Time:</b> ${t.time || 'Not set'} <br>
-    <b>Message:</b> ${t.message || '-'} <br>
-    <b>Sender:</b> ${t.senderName || 'Admin'} (${t.senderPhone || '-'})
-  `;
-}
-
 // ── DATA FETCH ───────────────────────────────────────────────────────────────
 async function fetchAll() {
   await Promise.all([fetchSummary(), loadClinics(), loadSchedule(), fetchStatus()]);
@@ -924,7 +723,7 @@ async function fetchAll() {
 
 async function fetchStatus() {
   try {
-    const d = await (await fetch(`${API}/api/status`)).json();
+    const d = await (await fetch('/api/status')).json();
     statsData = d.stats || {};
     if (d.connected) setWaStatus('connected','✓ Connected');
     else if (d.qrAvailable) setWaStatus('connecting','Scan QR Code');
@@ -935,8 +734,8 @@ async function fetchStatus() {
 async function fetchSummary() {
   try {
     const [s, e] = await Promise.all([
-      fetch(`${API}/api/summary`).then(r=>r.json()),
-     fetch(`${API}/api/employees`).then(r=>r.json())
+      fetch('/api/summary').then(r=>r.json()),
+      fetch('/api/employees').then(r=>r.json())
     ]);
     summaryData = s.summary || [];
     scanRecords = e.employees || [];
@@ -945,78 +744,9 @@ async function fetchSummary() {
   } catch(err) { console.error(err); }
 }
 
-  function renderMessageLogs() {
-  const tbody = document.getElementById('messages-tbody');
-  const filter = document.getElementById('msg-filter')?.value || '';
-
-  const logs = activityLog.filter(e =>
-    !filter || (e.message && e.message.toLowerCase().includes(filter))
-  );
-
-  if (!logs.length) {
-    tbody.innerHTML = `<tr><td colspan="5">No message logs yet</td></tr>`;
-    return;
-  }
-
-  // ✅ GROUP BY DAY
-  const grouped = {};
-
-  logs.forEach(e => {
-    const day = new Date(e.time).toLocaleDateString('en-US', {
-      weekday: 'long'
-    });
-
-    if (!grouped[day]) grouped[day] = [];
-    grouped[day].push(e);
-  });
-
-  tbody.innerHTML = '';
-
-  Object.keys(grouped).forEach(day => {
-
-    // Day Header
-    const header = document.createElement('tr');
-    header.innerHTML = `
-      <td colspan="5" style="background:#f1f5f9;font-weight:bold">
-        📅 ${day}
-      </td>
-    `;
-    tbody.appendChild(header);
-
-    // Logs
-    grouped[day].forEach(e => {
-      const time = new Date(e.time).toLocaleTimeString();
-
-      const type =
-        e.message?.toLowerCase().includes('morning') ? 'Morning' :
-        e.message?.toLowerCase().includes('follow') ? 'Follow-up' :
-        e.message?.toLowerCase().includes('alert') ? 'Alert' :
-        'Message';
-
-      const status =
-        e.level === 'error'
-          ? '<span class="badge badge-red">failed</span>'
-          : '<span class="badge badge-green">delivered</span>';
-
-      const row = document.createElement('tr');
-
-      row.innerHTML = `
-        <td>${e.recipient || '-'}</td>
-        <td>${e.clinic || '-'}</td>
-        <td><span class="badge badge-blue">${type}</span></td>
-        <td style="color:var(--muted);font-size:.78rem">${time}</td>
-        <td>${status}</td>
-      `;
-
-      tbody.appendChild(row);
-    });
-
-  });
-}
-
 async function loadClinics() {
   try {
-    clinicsData = await (await fetch(`${API}/api/clinics`)).json();
+    clinicsData = await (await fetch('/api/clinics')).json();
     renderClinicsTable();
     renderStaffTable();
     populateDropdowns();
@@ -1027,14 +757,14 @@ async function loadClinics() {
 
 async function loadSchedule() {
   try {
-    scheduleData = await (await fetch(`${API}/api/schedule`)).json();
+    scheduleData = await (await fetch('/api/schedule')).json();
     renderRemindersPage();
   } catch {}
 }
 
 async function loadActivityLog() {
   try {
-    const d = await (await fetch(`${API}/api/activity?limit=100`)).json();
+    const d = await (await fetch('/api/activity?limit=100')).json();
     activityLog = d.logs || [];
     const el = document.getElementById('full-log');
     el.innerHTML = activityLog.length ? activityLog.map(e => logEntryHTML(e)).join('') : '<div class="empty"><div class="empty-icon">≡</div><div class="empty-sub">No activity yet</div></div>';
@@ -1183,18 +913,7 @@ async function saveClinic() {
   const body = { name:document.getElementById('c-name').value.trim(), location:document.getElementById('c-location').value.trim(), supervisor:{ name:document.getElementById('c-sup-name').value.trim(), whatsapp:document.getElementById('c-sup-wa').value.trim() } };
   if (!body.name||!body.location||!body.supervisor.name||!body.supervisor.whatsapp) { toast('All fields required','error'); return; }
   try {
-const r = await (
-  await fetch(
-    editId
-      ? `${API}/api/clinics/${editId}`
-      : `${API}/api/clinics`,
-    {
-      method: editId ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    }
-  )
-).json();    
+    const r = await (await fetch(editId?`/api/clinics/${editId}`:'/api/clinics', { method:editId?'PUT':'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })).json();
     if (r.success) { toast(editId?'✅ Clinic updated':'✅ Clinic added','success'); closeModal('clinic-modal'); await loadClinics(); fetchSummary(); }
     else toast('Error: '+r.error,'error');
   } catch { toast('Request failed','error'); }
@@ -1202,7 +921,7 @@ const r = await (
 
 async function deleteClinic(id, name) {
   if (!confirm(`Delete clinic "${name}"?`)) return;
-  const r = await (await fetch(`${API}/api/clinics/${id}`, { method: 'DELETE' })).json();
+  const r = await (await fetch('/api/clinics/'+id,{method:'DELETE'})).json();
   if (r.success) { toast('Clinic deleted','info'); await loadClinics(); fetchSummary(); }
   else toast('Error: '+r.error,'error');
 }
@@ -1395,70 +1114,23 @@ async function sendIndividualReminder(empId, clinicId) {
 function renderMessageLogs() {
   const tbody = document.getElementById('messages-tbody');
   const filter = document.getElementById('msg-filter')?.value || '';
-
-  const logs = activityLog.filter(e =>
-    !filter || (e.message && e.message.toLowerCase().includes(filter))
-  );
-
+  const logs = activityLog.filter(e => !filter || e.message.toLowerCase().includes(filter));
   if (!logs.length) {
-    tbody.innerHTML = `<tr><td colspan="5">No message logs yet</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">◻</div><div class="empty-sub">No message logs yet</div></div></td></tr>`;
     return;
   }
-
-  // ✅ GROUP BY DAY
-  const grouped = {};
-
-  logs.forEach(e => {
-    const day = new Date(e.time).toLocaleDateString('en-US', {
-      weekday: 'long'
-    });
-
-    if (!grouped[day]) grouped[day] = [];
-    grouped[day].push(e);
-  });
-
-  tbody.innerHTML = '';
-
-  Object.keys(grouped).forEach(day => {
-
-    // Day heading
-    const header = document.createElement('tr');
-    header.innerHTML = `
-      <td colspan="5" style="background:#f1f5f9;font-weight:bold">
-        📅 ${day}
-      </td>
-    `;
-    tbody.appendChild(header);
-
-    // Logs inside
-    grouped[day].forEach(e => {
-      const time = new Date(e.time).toLocaleTimeString();
-
-      const type =
-        e.message?.toLowerCase().includes('morning') ? 'Morning' :
-        e.message?.toLowerCase().includes('follow') ? 'Follow-up' :
-        e.message?.toLowerCase().includes('alert') ? 'Alert' :
-        'Message';
-
-      const status =
-        e.level === 'error'
-          ? '<span class="badge badge-red">failed</span>'
-          : '<span class="badge badge-green">delivered</span>';
-
-      const row = document.createElement('tr');
-
-      row.innerHTML = `
-        <td>${e.recipient || '-'}</td>
-        <td>${e.clinic || '-'}</td>
-        <td><span class="badge badge-blue">${type}</span></td>
-        <td style="color:var(--muted);font-size:.78rem">${time}</td>
-        <td>${status}</td>
-      `;
-
-      tbody.appendChild(row);
-    });
-
-  });
+  tbody.innerHTML = logs.slice(0,50).map(e => {
+    const t = new Date(e.time).toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'});
+    const type = e.message.includes('morning')||e.message.includes('Morning') ? 'first reminder' : e.message.includes('follow')||e.message.includes('Follow') ? 'follow-up' : e.message.includes('supervisor')||e.message.includes('Supervisor') ? 'supervisor alert' : 'info';
+    const status = e.level==='error' ? `<span class="badge badge-red">failed</span>` : `<span class="badge badge-green">delivered</span>`;
+    return `<tr>
+      <td style="font-weight:500">${e.message.substring(0,30)}...</td>
+      <td>—</td>
+      <td><span class="badge badge-blue">${type}</span></td>
+      <td style="color:var(--muted);font-size:.78rem">${t}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── WA SESSIONS ───────────────────────────────────────────────────────────────
@@ -1611,7 +1283,7 @@ async function toggleReminder(id, enabled) {
 
 async function deleteReminder(id, name) {
   if (!confirm(`Delete reminder "${name}"?`)) return;
-  const r = await (await fetch(`${API}/api/schedule/${id}`, { method: 'DELETE' })).json();
+  const r = await (await fetch('/api/schedule/'+id,{method:'DELETE'})).json();
   if (r.success) { toast('Reminder deleted','info'); await loadSchedule(); }
   else toast('Error: '+r.error,'error');
 }
@@ -1621,7 +1293,7 @@ async function trigger(type) {
   const labels={morning:'Morning Reminders',followup:'Follow-up Reminders',supervisor:'Supervisor Alerts'};
   toast('⏳ Sending '+labels[type]+'...','info');
   try {
-    const r = await (await fetch(`${API}/api/trigger/${type}`, { method: 'POST' })).json();
+    const r = await (await fetch('/api/trigger/'+type,{method:'POST'})).json();
     if (r.success) toast('✅ '+labels[type]+' sent!','success');
     else toast('❌ '+(r.error||'Failed'),'error');
   } catch { toast('❌ Request failed','error'); }
@@ -1629,7 +1301,7 @@ async function trigger(type) {
 
 async function resetToday() {
   if (!confirm('Reset all scan data for today?')) return;
-  const r = await (await fetch(`${API}/api/reset`, { method: 'POST' })).json();
+  const r = await (await fetch('/api/reset',{method:'POST'})).json();
   if (r.success) toast('↺ Reset done','info');
 }
 
@@ -1642,549 +1314,6 @@ function showQR() {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 setInterval(fetchAll, 30000);
-loadTemplates();
-function sendWhatsApp() {
-  const image = selectedImage;
-  const number = document.getElementById('wa-number').value;
-  const message = document.getElementById('message-text').value;
-
-  if (!number || !message) {
-    alert('Enter number and message');
-    return;
-  }
-
- fetch(`${API}/api/send`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ number: number, message: message })
-})
-.then(res => res.json())
-.then(data => {
-  alert('Message Sent ✅');
-})
-.catch(err => {
-  alert('Error ❌');
-  console.log(err);
-});
-
-async function loadTemplates() {
-  try {
-    const res = await fetch(`${API}/api/templates`);
-
-    if (!res.ok) {
-      throw new Error("API failed: " + res.status);
-    }
-
-    const data = await res.json();
-    console.log("Templates API:", data);
-
-    let templates = [];
-
-    if (Array.isArray(data)) {
-  templates = data;
-} else if (Array.isArray(data.templates)) {
-  templates = data.templates;
-} else if (data.templates && Array.isArray(data.templates.templates)) {
-  templates = data.templates.templates; // ✅ FIX
-} else if (Array.isArray(data.data)) {
-  templates = data.data;
-}
-
-    if (!Array.isArray(templates)) templates = [];
-
-    loadTemplateDropdown(templates);
-
-    const list = document.getElementById('template-list');
-
-    if (list) {
-      list.innerHTML = '';
-
-      if (templates.length === 0) {
-        list.innerHTML = `<p>No templates found</p>`;
-      } else {
-        templates.forEach(t => {
-          const div = document.createElement('div');
-
-          div.innerHTML = `
-            <div style="padding:10px;border-bottom:1px solid #eee">
-              <b>${t.name || 'No Name'}</b><br>
-              ${t.message || ''}
-            </div>
-          `;
-
-          list.appendChild(div);
-        });
-      }
-    }
-
-  } catch (err) {
-    console.error("Template error:", err);
-  }
-}
 </script>
-
-<!-- POPUP START -->
-<div id="popup" style="display:none; position:fixed; top:20%; left:30%; background:#fff; padding:20px; border-radius:10px; width:300px;">
-
-  <h3 id="templateName"></h3>
-
-  <img id="templateImage" src="" width="100%" />
-
-  <div id="previewBox"></div>
-
-  <input type="time" id="scheduleTime" />
-
-  <input type="text" id="number" placeholder="Enter Number" />
-
-  <br><br>
-
-  <button onclick="sendFromPopup()">Send</button>
-  <button onclick="closePopup()">Close</button>
-
-</div>
-<!-- POPUP END -->
-
-<!-- TEMPLATE POPUP -->
-<div id="template-popup" style="display:none; position:fixed; top:20%; left:35%; background:white; padding:20px; border-radius:10px; width:320px; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:999;">
-
-  <h3>Send Template</h3>
-
-  <img id="popup-image" src="" width="100%" style="border-radius:8px; margin-bottom:10px;" />
-
-  <input id="popup-subject" placeholder="Subject" style="width:100%; margin-bottom:10px;" />
-
-  <textarea id="popup-message" placeholder="Message" style="width:100%; margin-bottom:10px;"></textarea>
-
-  <input id="popup-number" placeholder="Enter Number" style="width:100%; margin-bottom:10px;" />
-
-  <input type="time" id="popup-time" style="width:100%; margin-bottom:10px;" />
-
-  <button onclick="sendFromPopup()">Send</button>
-  <button onclick="closePopup()">Close</button>
-
-</div>
-
-<div id="popup" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%);
-background:white; padding:20px; border-radius:10px; z-index:1000; width:350px;">
-
-  <h3 id="templateName"></h3>
-
-  <img id="templateImage" style="width:100%; margin-bottom:10px;">
-
-  <div id="previewBox"></div>
-
-  <br>
-
-  <input id="popup-number" placeholder="Enter WhatsApp Number">
-  <br><br>
-
-  <input id="popup-time" type="time">
-  <br><br>
-
-  <button onclick="sendFromPopup()">Send</button>
-  <button onclick="closePopup()">Close</button>
-
-</div>
 </body>
 </html>
-
-
-<script>
-
-  function groupByDay(logs) {
-  const grouped = {};
-
-  logs.forEach(log => {
-    const day = new Date(log.time).toLocaleDateString('en-US', {
-      weekday: 'long'
-    });
-
-    if (!grouped[day]) {
-      grouped[day] = [];
-    }
-
-    grouped[day].push(log);
-  });
-
-  return grouped;
-}
-
-  let selectedImage = "";
-
-  function showQR() {
-
-  function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) {
-    modal.style.display = 'none';
-  }
-}
-  const modal = document.getElementById('qr-modal');
-  const img = document.getElementById('qr-img');
-
-  if (!modal || !img) {
-    alert("QR modal not found ❌");
-    return;
-  }
-
-  modal.style.display = 'flex'; // popup open
-
-  img.src = '/api/qr?t=' + Date.now(); // QR load
-}
-let templates = [];
-
-// LOAD TEMPLATES
-// ================= TEMPLATE LOAD =================
-  loadTemplates();
-
-// ================= AUTO FILL MESSAGE =================
-document.addEventListener('DOMContentLoaded', () => {
-  const select = document.getElementById('template-select');
-
-  if (select) {
-    select.addEventListener('change', async function () {
-      const id = this.value;
-      if (!id) return;
-
-      const res = await fetch(`${API}/api/templates/${id}`)
-      const data = await res.json();
-
-      document.getElementById('message-text').value = data.message;
-    });
-  }
-});
-
-// ================= SEND WHATSAPP =================
-async function sendMessage() {
-  try {
-    let number = document.getElementById("number").value;
-
-    if (!number.includes("@")) {
-      number = number + "@s.whatsapp.net";
-  }
-    const message = document.getElementById('message').value;
-
-    const res = await fetch(`${API}/api/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ number, message })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      alert("Message Sent ✅");
-    } else {
-      alert("Error: " + (data.error || "Failed"));
-    }
-
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}    // loadTemplates close
-
-    // ✅ VERY IMPORTANT
-
-  // popup open
-  document.getElementById('popup').style.display = 'block';
-
-  // image set
-  document.getElementById('templateImage').src = img.src;
-  document.getElementById('templateImage').style.height = "180px";
-  document.getElementById('templateImage').style.width = "300px";
-  document.getElementById('templateImage').style.objectFit = "cover";
-
-  // title set
-  document.getElementById('templateName').innerText = subject;
-
-  // message preview (WhatsApp style)
-  document.getElementById('previewBox').innerHTML = `
-  <div style="
-    background:#0f3d2e;
-    color:white;
-    padding:15px;
-    border-radius:12px;
-    width:300px;
-    height:180px;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-  ">
-    
-    <div style="font-size:16px;font-weight:bold;">
-      ${subject}
-    </div>
-
-    <div style="margin-top:10px; overflow:hidden;">
-      ${message.replace(/\n/g, '<br>')}
-    </div>
-
-    <div style="margin-top:10px; overflow:hidden;">
-      📍 Name: User <br>
-      ⏰ Time: ${new Date().toLocaleTimeString()}
-    </div>
-
-    <div style="margin-top:10px; overflow:hidden;">
-      🚨 Please complete immediately
-    </div>
-
-  </div>
-`;
-
-function closePopup() {
-  document.getElementById('popup').style.display = 'none';
-}
-
-async function sendFromPopup() {
-  let number = document.getElementById('popup-number').value;
-
-  if (!number.includes("@")) {
-    number = number + "@s.whatsapp.net";
-  }
-
-  const message = document.getElementById('previewBox').innerText;
-  const image = document.getElementById('templateImage').src;
-  const time = document.getElementById('popup-time').value;
-
-  const finalMessage = message + `\n\n⏰ Scheduled Time: ${time}`;
-
-  const res = await fetch('http://localhost:3000/api/send', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      number,
-      message: finalMessage,
-      image
-    })
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    alert('✅ Sent');
-  } else {
-    alert('❌ Error: ' + data.error);
-    console.log(data);
-  }
-}
-
-  async function onTemplateChange(id) {
-  if (!id) return;
-
-  const res = await fetch(`${API}/api/templates/${id}`);
-  const t = await res.json();
-
-  document.getElementById('message-text').value = t.message || '';
-
-    const details = document.getElementById('template-details');
-
-details.innerHTML = `
-  <b>Name:</b> ${t.name || '-'} <br>
-  <b>Time:</b> ${t.time || 'Not set'} <br>
-  <b>Days:</b> ${t.days ? t.days.join(', ') : 'Daily'} <br>
-  <b>Message:</b> ${t.message || '-'} <br>
-  <b>Sender:</b> ${t.senderName || 'Admin'} (${t.senderPhone || '-'})
-`;
-
-  const img = document.getElementById('template-image');
-  if (t.image) {
-    img.src = t.image;
-    img.style.display = 'block';
-  } else {
-    img.style.display = 'none';
-  }
-}
-
-// 👇 ADD HERE
-// ✅ DROPDOWN FUNCTION
-function loadTemplateDropdown(templates) {
-  const dropdown = document.getElementById('template-select');
-
-  if (!dropdown) return;
-
-  dropdown.innerHTML = `<option value="">Select Template</option>`;
-
-  if (!Array.isArray(templates)) return;
-
-templates.forEach(t => {
-  const div = document.createElement('div');
-
-  div.innerHTML = `
-    <div style="padding:10px;border-bottom:1px solid #eee">
-      <b>${t.name || 'No Name'}</b><br>
-      ${t.message || ''}
-    </div>
-  `;
-
-  // ✅ ADD THIS (MAIN FIX)
-  div.onclick = () => {
-    document.getElementById('templateName').innerText = t.name;
-    document.getElementById('templateImage').src = t.image || "";
-
-    selectedImage = t.image || "";   // 🔥 VERY IMPORTANT
-
-    document.getElementById('message-text').value = t.message || "";
-
-    document.getElementById('popup').style.display = 'block';
-  };
-
-  list.appendChild(div);
-});
-// ================= TEMPLATES =================
-
-async function loadTemplates() {
-  try {
-    const res = await fetch(`${API}/api/templates`);
-
-    if (!res.ok) {
-      throw new Error("API failed: " + res.status);
-    }
-
-    const data = await res.json();
-    console.log("Templates API:", data);
-
-    let templates = [];
-
-    if (Array.isArray(data)) {
-      templates = data;
-    } else if (Array.isArray(data.templates?.templates)) {
-      templates = data.templates.templates;
-    } else if (Array.isArray(data.templates)) {
-      templates = data.templates;
-    } else if (Array.isArray(data.data)) {
-      templates = data.data;
-    }
-
-    window._templates = templates;
-
-    loadTemplateDropdown(templates);
-
-    const list = document.getElementById('template-list');
-
-    if (!list) return;
-
-    list.innerHTML = '';
-
-    if (templates.length === 0) {
-      list.innerHTML = `<p>No templates found</p>`;
-      return;
-    }
-
-    templates.forEach(t => {
-      const div = document.createElement('div');
-
-      div.innerHTML = `
-        <div style="padding:10px;border-bottom:1px solid #eee">
-          <b>${t.name || 'No Name'}</b><br>
-          ${t.message || ''}
-        </div>
-      `;
-
-      list.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("Template error:", err);
-  }
-}
-// ================= DROPDOWN =================
-
-function loadTemplateDropdown(templates) {
-  const dropdown = document.getElementById('template-select');
-
-  if (!dropdown) return;
-
-  dropdown.innerHTML = `<option value="">Select Template</option>`;
-
-  if (!Array.isArray(templates)) return;
-
-  templates.forEach(t => {
-    const option = document.createElement('option');
-    option.value = t.id;
-    option.textContent = t.name || 'Unnamed';
-    dropdown.appendChild(option);
-  });
-}
-}
-// ================= TEMPLATE CHANGE =================
-
-async function onTemplateChange(id) {
-  if (!id) return;
-
-  try {
-    const res = await fetch(`${API}/api/templates/${id}`);
-    const t = await res.json();
-
-    document.getElementById('message-text').value = t.message || '';
-
-    const img = document.getElementById('template-image');
-
-    if (t.image) {
-      img.src = t.image;
-      img.style.display = 'block';
-    } else {
-      img.style.display = 'none';
-    }
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-  function sendWhatsApp() {
-  const number = document.getElementById('wa-number').value;
-  const message = document.getElementById('message-text').value;
-
-  if (!number || !message) {
-    alert('Enter number and message');
-    return;
-  }
-
-  fetch(`${API}/api/send`, {   // ✅ correct API
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      number: number,
-      message: message
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert('Message Sent ✅');
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Error ❌');
-  });
-}
-// ================= IMAGE + POPUP =================
-
-function selectImage(img) {
-  const preview = document.getElementById('selected-image');
-  preview.src = img.src;
-  preview.style.display = 'block';
-}
-
-function openTemplatePopup(img, subject, message) {
-  document.getElementById('popup').style.display = 'block';
-  document.getElementById('templateImage').src = img.src;
-  document.getElementById('templateName').innerText = subject;
-  document.getElementById('previewBox').innerHTML = message;
-}
-
-function closePopup() {
-  document.getElementById('popup').style.display = 'none';
-}
-
-async function sendFromPopup() {
-  // keep your existing logic if needed
-}
-</script>
-
-
