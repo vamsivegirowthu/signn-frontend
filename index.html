@@ -668,6 +668,7 @@ select.form-input{cursor:pointer}
 
 <script>
 const socket = io();
+const API_BASE = "https://signn-reminder-system-production-7c91.up.railway.app";
 let clinicsData = { clinics:[] };
 let summaryData = [];
 let scheduleData = { reminders:[] };
@@ -760,7 +761,7 @@ async function fetchAll() {
 
 async function fetchStatus() {
   try {
-    const d = await (await fetch('/api/status')).json();
+    const d = await (await fetch(`${API_BASE}/api/status`)).json();
     statsData = d.stats || {};
     if (d.connected) setWaStatus('connected','✓ Connected');
     else if (d.qrAvailable) setWaStatus('connecting','Scan QR Code');
@@ -771,8 +772,8 @@ async function fetchStatus() {
 async function fetchSummary() {
   try {
     const [s, e] = await Promise.all([
-      fetch('/api/summary').then(r=>r.json()),
-      fetch('/api/employees').then(r=>r.json())
+      fetch(`${API_BASE}/api/summary`).then(r=>r.json()),
+      fetch(`${API_BASE}/api/employees`).then(r=>r.json())
     ]);
     summaryData = s.summary || [];
     scanRecords = e.employees || [];
