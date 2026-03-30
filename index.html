@@ -835,8 +835,9 @@ async function loadTemplates() {
 
     if (Array.isArray(data)) {
       templates = data;
-    } else if (Array.isArray(data.templates)) {
-      templates = data.templates;
+    } else if (Array.isArray(data.templates?.templates)) {
+      templates = data.templates.templates;
+}
     } else if (Array.isArray(data.data)) {
       templates = data.data;
     }
