@@ -744,7 +744,7 @@ function setWaStatus(status, label) {
 socket.on('connect', fetchAll);
 socket.on('wa_connected', () => { setWaStatus('connected','✓ Connected'); closeModal('qr-modal'); toast('✅ WhatsApp connected!','success'); });
 socket.on('wa_disconnected', d => { setWaStatus('disconnected','✗ Disconnected'); toast('⚠️ WA disconnected','error'); });
-socket.on('qr_update', () => { setWaStatus('connecting','Scan QR Code'); showQR(); clearInterval(window._qrTimer); window._qrTimer = setInterval(() => { const img=document.getElementById('qr-img'); img.src='/api/qr?t='+Date.now(); }, 20000); });
+socket.on('qr_update', () => { setWaStatus('connecting','Scan QR Code'); showQR(); clearInterval(window._qrTimer); window._qrTimer = setInterval(() => { const img=document.getElementById('qr-img'); img.src='https://signn-reminder-system-production-7c91.up.railway.app/api/qr?t='+Date.now(); }, 20000); });
 socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
 socket.on('clinics_data', d => { clinicsData=d; renderClinicsTable(); renderStaffTable(); populateDropdowns(); renderRules(); });
@@ -1336,7 +1336,37 @@ async function trigger(type) {
   } catch { toast('❌ Request failed','error'); }
 }
 
-async function resetToday() {
+async function sendWhatsApp() {
+  const number = document.getElementById('wa-number').value;
+  const message = document.getElementById('wa-message').value;
+
+  if (!number || !message) {
+    alert("Enter number and message");
+    return;
+  }
+
+  fetch('https://signn-reminder-system-production-7c91.up.railway.app/api/send-message', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      number: number,
+      message: message
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("Message sent ✅");
+    } else {
+      alert("Failed ❌");
+    }
+  })
+  .catch(() => {
+    alert("Error ❌");
+  });
+}
   if (!confirm('Reset all scan data for today?')) return;
   const r = await (await fetch('/api/reset',{method:'POST'})).json();
   if (r.success) toast('↺ Reset done','info');
@@ -1344,19 +1374,69 @@ async function resetToday() {
 
 // ── QR ────────────────────────────────────────────────────────────────────────
 function showQR() {
+  async function sendWhatsApp() {
+  const number = document.getElementById('wa-number').value;
+  const message = document.getElementById('wa-message').value;
+
+  if (!number || !message) {
+    alert("Enter number and message");
+    return;
+  }
+
+  try {
+    const res = await fetch('https://signn-reminder-system-production-7c91.up.railway.app/api/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number, message })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Message sent ✅");
+    } else {
+      alert("Failed ❌");
+    }
+
+  } catch (err) {
+    alert("Error ❌");
+    console.error(err);
+  }
+}
   openModal('qr-modal');
   const img = document.getElementById('qr-img');
-  img.src = '/api/qr?t=' + Date.now();
-}
+  img.src = img.src = 'https://signn-reminder-system-production-7c91.up.railway.app/api/qr?t=' + Date.now();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 setInterval(fetchAll, 30000);
 
-function sendWhatsApp() {
+async function sendWhatsApp() {
   const number = document.getElementById('wa-number').value;
   const message = document.getElementById('wa-message').value;
 
-  alert("Sending to: " + number + "\nMessage: " + message);
+  if (!number || !message) {
+    alert("Enter number and message");
+    return;
+  }
+
+  try {
+    const res = await fetch('https://signn-reminder-system-production-7c91.up.railway.app/api/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number, message })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Message sent ✅");
+    } else {
+      alert("Failed ❌");
+    }
+
+  } catch (err) {
+    alert("Error ❌");
+  }
 }
   
 </script>
