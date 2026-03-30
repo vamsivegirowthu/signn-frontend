@@ -803,7 +803,8 @@ socket.on('qr', (qr) => {
   const img = document.getElementById('qr-img');
 
   if (qr) {
-    img.src = qr; // 🔥 backend already image పంపుతుంది
+   img.src = qr;
+   img.style.display = 'block';   // 👉 ఇది add చేయాలి // 🔥 backend already image పంపుతుంది
     openModal('qr-modal');
   } else {
     img.src = "";
