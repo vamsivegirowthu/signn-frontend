@@ -1049,14 +1049,14 @@ async function loadClinics() {
 
 async function loadSchedule() {
   try {
-    scheduleData = await (await fetch('/api/schedule')).json();
+    scheduleData = await (await fetch(`${API_BASE}/api/schedule`)).json();
     renderRemindersPage();
   } catch {}
 }
 
 async function loadActivityLog() {
   try {
-    const d = await (await fetch('/api/activity?limit=100')).json();
+    const d = await (await fetch(`${API_BASE}/api/activity?limit=100`)).json();
     activityLog = d.logs || [];
     const el = document.getElementById('full-log');
     el.innerHTML = activityLog.length ? activityLog.map(e => logEntryHTML(e)).join('') : '<div class="empty"><div class="empty-icon">≡</div><div class="empty-sub">No activity yet</div></div>';
@@ -1213,7 +1213,7 @@ async function saveClinic() {
 
 async function deleteClinic(id, name) {
   if (!confirm(`Delete clinic "${name}"?`)) return;
-  const r = await (await fetch('/api/clinics/'+id,{method:'DELETE'})).json();
+  const r = await (await fetch(`${API_BASE}/api/clinics/${id}`, { method:'DELETE' })).json();
   if (r.success) { toast('Clinic deleted','info'); await loadClinics(); fetchSummary(); }
   else toast('Error: '+r.error,'error');
 }
@@ -1372,7 +1372,7 @@ If you have already scanned, please ignore this message.`;
   }
 
   try {
-    const res = await fetch('/api/send-message', {
+    const res = await fetch(`${API_BASE}/api/send-message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ number, message })
@@ -1614,7 +1614,7 @@ async function toggleReminder(id, enabled) {
 
 async function deleteReminder(id, name) {
   if (!confirm(`Delete reminder "${name}"?`)) return;
-  const r = await (await fetch('/api/schedule/'+id,{method:'DELETE'})).json();
+  const r = await (await fetch(`${API_BASE}/api/schedule/${id}`, { method:'DELETE' })).json();
   if (r.success) { toast('Reminder deleted','info'); await loadSchedule(); }
   else toast('Error: '+r.error,'error');
 }
@@ -1624,7 +1624,7 @@ async function trigger(type) {
   const labels={morning:'Morning Reminders',followup:'Follow-up Reminders',supervisor:'Supervisor Alerts'};
   toast('⏳ Sending '+labels[type]+'...','info');
   try {
-    const r = await (await fetch('/api/trigger/'+type,{method:'POST'})).json();
+    const r = await (await fetch(`${API_BASE}/api/trigger/${type}`, { method:'POST' })).json();
     if (r.success) toast('✅ '+labels[type]+' sent!','success');
     else toast('❌ '+(r.error||'Failed'),'error');
   } catch { toast('❌ Request failed','error'); }
@@ -1761,6 +1761,77 @@ async function sendWhatsApp() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ number, message })
   });
+}
+
+  async function sendWhatsApp() {
+
+  const number = document.getElementById("wa-number").value;
+  const message = document.getElementById("wa-message").value;
+
+  if (!number || !message) {
+    alert("Enter number and message");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://signn-backend-production-a97a.up.railway.app/api/send-message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        number: number,
+        message: message
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Message sent ✅");
+    } else {
+      alert("Failed ❌");
+    }
+
+  } catch (err) {
+    console.log(err);
+    alert("Server error");
+  }
+}
+
+  async function sendWhatsApp() {
+  const number = document.getElementById("wa-number").value;
+  const message = document.getElementById("wa-message").value;
+
+  if (!number || !message) {
+    alert("Enter number and message");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://signn-backend-production-a97a.up.railway.app/api/send-message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        number: number,
+        message: message
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Message sent ✅");
+    } else {
+      alert("Failed ❌");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
 }
   
 </script>
