@@ -1807,29 +1807,29 @@ async function sendWhatsApp() {
     return;
   }
 
-  try {
-    const res = await fetch("https://signn-backend-production-a97a.up.railway.app/api/send-message", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        number: number,
-        message: message
-      })
-    });
+ try {
+  const res = await fetch("https://signn-backend-production-a97a.up.railway.app/api/send-message", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      number: number,
+      message: message
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (data.success) {
-      alert("Message sent ✅");
-    } else {
-      alert("Failed ❌");
-
-  } catch (err) {
-    console.error(err);
-    alert("Server error ❌");
+  if (data.success) {
+    alert("Message sent ✅");
+  } else {
+    alert("Failed ❌");
   }
+
+} catch (err) {
+  console.error(err);
+  alert("Server error ❌");
 }
   
 </script>
