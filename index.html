@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SIGNN Ops Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -665,7 +666,7 @@ select.form-input{cursor:pointer}
     <div class="modal-header"><span class="modal-title">📱 Link WhatsApp</span><button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('qr-modal')">✕</button></div>
     <div class="modal-body" style="text-align:center">
       <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.2rem">Open WhatsApp → <strong>Linked Devices</strong> → <strong>Link a Device</strong> → scan below</p>
-      <img id="qr-img" src="" alt="QR Code">
+      <canvas id="qrCanvas"></canvas>
       <p style="color:var(--yellow);font-size:.75rem;margin-top:.75rem">Refreshes automatically every 20 seconds</p>
     </div>
   </div>
@@ -992,9 +993,14 @@ socket.on('qr_update', (data) => {
   setWaStatus('connecting','Scan QR Code');
   showQR();
 
-  const img = document.getElementById('qr-img');
-  img.src = data.qr; // 🔥 direct QR image
-});socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
+  const canvas = document.getElementById('qrCanvas');
+
+  QRCode.toCanvas(canvas, data.qr, function (error) {
+    if (error) console.error(error);
+    console.log("QR rendered");
+  });
+}); 
+socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
 socket.on('clinics_data', d => { clinicsData=d; renderClinicsTable(); renderStaffTable(); populateDropdowns(); renderRules(); });
 socket.on('schedule_updated', d => { scheduleData=d; renderRemindersPage(); });
