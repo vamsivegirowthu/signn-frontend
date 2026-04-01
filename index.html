@@ -666,7 +666,7 @@ select.form-input{cursor:pointer}
     <div class="modal-header"><span class="modal-title">📱 Link WhatsApp</span><button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('qr-modal')">✕</button></div>
     <div class="modal-body" style="text-align:center">
       <p style="color:var(--muted);font-size:.85rem;margin-bottom:1.2rem">Open WhatsApp → <strong>Linked Devices</strong> → <strong>Link a Device</strong> → scan below</p>
-      <canvas id="qrCanvas"></canvas>
+      <img id="qrImage" width="250" />
       <p style="color:var(--yellow);font-size:.75rem;margin-top:.75rem">Refreshes automatically every 20 seconds</p>
     </div>
   </div>
@@ -993,13 +993,12 @@ socket.on('qr_update', (data) => {
   setWaStatus('connecting','Scan QR Code');
   showQR();
 
-  const canvas = document.getElementById('qrCanvas');
+  const img = document.getElementById('qrImage');
 
-  QRCode.toCanvas(canvas, data.qr, function (error) {
-    if (error) console.error(error);
-    console.log("QR rendered");
-  });
-});
+if (img) {
+  img.src = data.qr;
+}
+
 socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
 socket.on('clinics_data', d => { clinicsData=d; renderClinicsTable(); renderStaffTable(); populateDropdowns(); renderRules(); });
