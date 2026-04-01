@@ -999,7 +999,7 @@ socket.on('qr_update', (data) => {
     if (error) console.error(error);
     console.log("QR rendered");
   });
-}); 
+});
 socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
 socket.on('clinics_data', d => { clinicsData=d; renderClinicsTable(); renderStaffTable(); populateDropdowns(); renderRules(); });
