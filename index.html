@@ -677,7 +677,9 @@ select.form-input{cursor:pointer}
 <script>
 
 const API_BASE = "https://signn-backend-production-a97a.up.railway.app";
-const socket = io(API_BASE);
+const socket = io(API_BASE, {
+  transports: ["websocket", "polling"]
+});
 let clinicsData = { clinics:[] };
 let summaryData = [];
 let scheduleData = { reminders:[] };
@@ -995,9 +997,10 @@ socket.on('qr_update', (data) => {
 
   const img = document.getElementById('qrImage');
 
-if (img) {
-  img.src = data.qr;
-}
+  if (img) {
+    img.src = data.qr;
+  }
+});   // ✅ 
 
 socket.on('summary_update', d => { summaryData=d.summary||[]; statsData=d.stats||{}; renderDashboard(); });
 socket.on('clinics_updated', () => loadClinics());
