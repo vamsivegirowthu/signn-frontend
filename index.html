@@ -1667,7 +1667,7 @@ If you have already scanned, please ignore this message.`;
     return;
   }
 
-  fetch('/api/send-message', {
+  fetch(`${API_BASE}/api/send-message`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -1735,7 +1735,7 @@ Please take necessary action.`;
   }
 
   try {
-    const res = await fetch('/api/send-message', {
+    const res = await fetch(`${API_BASE}/api/send-message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ number, message })
@@ -1767,7 +1767,7 @@ async function sendWhatsApp() {
     .replace("{{date}}", now.toLocaleDateString())
     .replace("{{time}}", now.toLocaleTimeString());
 
-  fetch('/api/send-message', {
+  fetch(`${API_BASE}/api/send-message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ number, message })
