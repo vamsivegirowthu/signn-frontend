@@ -995,7 +995,10 @@ function saveTemplate() {
   localStorage.setItem("templates", JSON.stringify(templates));
 
   alert("Template saved ✅");
+  loadTemplates();
+document.getElementById("template-creator").style.display = "none";
 }
+
 
 // 🔥 AUTO FILL MESSAGE
 
